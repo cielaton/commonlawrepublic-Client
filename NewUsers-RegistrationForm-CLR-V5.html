@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<!-- saved from url=(0042)https://commonlawrepublic.us/register.html -->
+
+<html lang="en">
+<head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <title>NewUsers-RegistrationForm-CLR</title>
+    <style>
+        #first-div {
+            width: 100%;
+        }
+
+        label {
+            color: #ffffff;
+            width: 100%;
+        }
+
+        input {
+            width: 100%;
+        }
+
+        div {
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        const onSelectedState = (obj) => {
+
+            fetch(`https://api.countrystatecity.in/v1/countries/US/states/${obj.value.slice(0, 2)}/cities`, {
+                headers: {
+                    "X-CSCAPI-KEY": "MVZaRnRTVmxEUk00OXd6bWFNOWd5WFR4NUZsNTBpOW9wS2lQMGFINg=="
+                }
+            }).then((response) => {
+                response.json().then((result) => {
+
+                    // Populate the city entries
+                    if (result.length !== 0) {
+                        // Append the city selection
+                        const locationSelection = document.getElementById('location-selection')
+
+                        const previousCitySelectionDiv = document.getElementById('city-selection-div')
+                        const citySelectionDiv = document.createElement('div')
+                        citySelectionDiv.id = "city-selection-div"
+
+                        const citySelectionLabel = document.createElement('label')
+                        citySelectionLabel.for = "city"
+                        citySelectionLabel.innerHTML = "Select your city:"
+
+                        const citySelection = document.createElement('select')
+                        citySelection.id = "city"
+                        citySelection.name = "city"
+                        citySelection.required = true
+                        citySelection.innerHTML = '<option id="default-city" value="">--Please choose a city--</option>';
+
+                        citySelectionDiv.appendChild(citySelectionLabel)
+                        citySelectionDiv.appendChild(document.createElement('br'))
+                        citySelectionDiv.appendChild(citySelection)
+
+
+                        if (previousCitySelectionDiv !== null) {
+                            locationSelection.replaceChild(citySelectionDiv, previousCitySelectionDiv)
+                        } else {
+                            locationSelection.appendChild(document.createElement('br'))
+                            locationSelection.appendChild(citySelectionDiv)
+                        }
+
+                        result.forEach(city => {
+                            const option = document.createElement('option');
+
+                            option.value = city.name; // Value contains the state name and the iso value
+                            option.textContent = city.name; // Display the state name
+
+                            citySelection.appendChild(option);
+                        });
+                    }
+                })
+            })
+        }
+
+        // Function to fetch countries from the REST Countries API
+        async function fetchCountries() {
+            try {
+                const response = await fetch('https://api.countrystatecity.in/v1/countries/US/states', {
+                    headers: {
+                        "X-CSCAPI-KEY": "MVZaRnRTVmxEUk00OXd6bWFNOWd5WFR4NUZsNTBpOW9wS2lQMGFINg=="
+                    }
+                });
+                const countries = await response.json();
+
+                // Get the dropdown element
+                const locationDropdown = document.getElementById('state');
+
+                // Clear any existing options (except the default one)
+                locationDropdown.innerHTML = '<option value="">--Please choose a state--</option>';
+
+                // Add each state as an option
+                countries.forEach(state => {
+                    const option = document.createElement('option');
+
+                    option.value = `${state.iso2}${state.name}`; // Value contains the state name and the iso value
+                    option.textContent = state.name; // Display the state name
+
+                    locationDropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching countries:', error);
+            }
+        }
+
+        // --- Form submission handler ---
+        // Get the form object
+        window.onload = () => {
+            // Fetch countries when the page loads
+            fetchCountries()
+
+            var form = document.getElementById('register-form');
+            console.log(form)
+            form.onsubmit = (event) => {
+                event.preventDefault()
+                var request = new XMLHttpRequest();
+                var requestBody = Object.fromEntries(new FormData(form))
+                // Modify the location section in requestBody
+                requestBody.location = `${requestBody.state.slice(2)},${requestBody.city ? requestBody.city : ""}` // Using toSpice to omit the iso2 code
+                delete requestBody.city
+                delete requestBody.state
+
+                //open the request
+                fetch('https://commonlawrepublic.us/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                }).then((response) => {
+                    response.json().then((result) => {
+                        // On failure
+                        if (typeof result.error !== "undefined") {
+                            const previousError = document.getElementById("error-paragraph")
+                            const errorParagraph = document.createElement('p')
+                            errorParagraph.id = "error-paragraph"
+                            errorParagraph.innerHTML = typeof result.error === "string" ? result.error : Object.entries(result.error)[0][1]
+                            errorParagraph.style.cssText = "color: #f38ba8; text-align: center"
+                            if (previousError !== null) {
+                                document.getElementById("error-message").replaceChild(errorParagraph, previousError)
+                            }
+                            document.getElementById("error-message").appendChild(errorParagraph)
+                        }
+                        // On success
+                        else {
+                            const successParagraph = document.createElement('p')
+                            successParagraph.id = "success-paragraph"
+                            successParagraph.innerHTML = result.message
+                            successParagraph.style.cssText = "color: #a6e3a1; text-align: center"
+                            document.getElementById("error-message").appendChild(successParagraph)
+                            setTimeout(() => {
+                                window.location.replace("./login.html");
+                            }, 1000)
+                        }
+
+                    })
+                }).catch((error) => {
+                    const previousError = document.getElementById("error-paragraph")
+                    const errorParagraph = document.createElement('p')
+                    errorParagraph.id = "error-paragraph"
+                    errorParagraph.innerHTML = error
+                    errorParagraph.style.cssText = "color: #f38ba8; text-align: center"
+                    if (previousError !== null) {
+                        document.getElementById("error-message").replaceChild(errorParagraph, previousError)
+                    }
+                    document.getElementById("error-message").appendChild(errorParagraph)
+                })
+            }
+        }
+    </script>
+</head>
+
+<body style="background-color: #000000;">
+<h1 style="color: #e7e10e; text-align: center;"><u>NewUsers-RegistrationForm-CLR</u>.</h1>
+<div style="justify-self: center;">
+    <p style="display: inline; color: #ffffff;">If you
+        "<u>Already Have An Account</u>" with us; then, just:</p>
+    <a href="https://commonlawrepublic.us/login.html" style="color: #e7e10e;"><u>Login Here</u>.</a>
+</div>
+<br><br>
+<div style="justify-self: center;">
+    <p style="display: inline; color: #ffffff;">
+        You May Select Your Own Level of Involvement with our community here.
+        <br><br>
+        The Lowest-Level of Involvement, is simply:<br>
+        Registering with Only an Email-Address & Password;<br>
+        with that being all Very Simple & Private, all as one of our: "<u>Low-Level Users</u>".<br>
+        Here-under, you can select from our Current List of<br>
+        "Regular Email-Updates", which you desire to receive;<br>
+        & this will also give you a "Limited Open-Door", to interacting with our community.
+        <br><br>
+        Then, later, if you so decide, you can provide more info about about your-self,<br>
+        & then interact with us all in a more comlete & personally empowering manner.
+
+      <!-- I stopped edditing here.
+      I would like to delete that last box you had included,
+      where there isthedrop-down form where all thestates & citiesare listed.
+      I haveotherideas about how to handlethat part.
+
+      From now, let's keep our conversation inside the comment block to not let it affect the website
+       About the drop-down menu, it's being populated using javascript, let me show you.
+       -->
+
+
+        you can <u>Become More-Actively Involved</u>, as:<br>
+        a <u>Low, Mid, or High Level Constituent</u>;<br>
+        each of which different level, will require that<br>
+        you share more of your personal identification data with us.<br>
+        (All of this data is kept very private, on our secure internet web-page server.)
+        <br><br>
+        The form for you to fill out, is below.<br>
+        We start with the lowest-levels of required info;<br>
+        & then we progress to securing more data about you,<br>
+        if you desire to become more involved.
+        <br><br>
+        At any time in the future, you can log back in,<br>
+        & remove, or add to, the registration profile<br>
+        which we keep for you in our internet server's data-base.
+        <br><br>
+        <br><br>
+        Lowest Level Of Involvement #0:
+        <br><br>
+        Email-Address: [ ]
+        <br><br>
+        Password: [ ]
+        <br><br>
+        <br><br>
+        Slightly Higher-Level of Involvement #1:
+        <br><br>
+        User-Name: [ ]
+        <br><br>
+        Do You Reside In the USA?<br>
+        [ ] Yes. [ ] No.
+
+
+        <br><br>
+
+
+    <form id="register-form" style="justify-self: center; width: 300px;">
+        <div id="first-div">
+            <label>First name:</label><br>
+            <input id="firstName" name="firstName" type="text"><br>
+        </div>
+        <div>
+            <label>Last name:</label><br>
+            <input id="lastName" name="lastName" type="text"><br>
+        </div>
+        <div>
+            <label>Email:</label><br>
+            <input id="email" name="email" type="text"><br>
+        </div>
+        <div>
+            <label>Password:</label><br>
+            <input id="password" name="password" type="text"><br>
+        </div>
+
+
+        <div id="location-selection">
+            <!-- Location Selection Dropdown -->
+            <label for="state">Select your state:</label><br>
+            <select id="state" name="state" onchange="onSelectedState(this)" required="">
+                <option value="">--Please choose a state--</option>
+                <option value="UM-84Howland Island">Howland Island</option>
+                <option value="DEDelaware">Delaware</option>
+                <option value="AKAlaska">Alaska</option>
+                <option value="MDMaryland">Maryland</option>
+                <option value="UM-81Baker Island">Baker Island</option>
+                <option value="UM-89Kingman Reef">Kingman Reef</option>
+                <option value="NHNew Hampshire">New Hampshire</option>
+                <option value="UM-79Wake Island">Wake Island</option>
+                <option value="KSKansas">Kansas</option>
+                <option value="TXTexas">Texas</option>
+                <option value="NENebraska">Nebraska</option>
+                <option value="VTVermont">Vermont</option>
+                <option value="UM-86Jarvis Island">Jarvis Island</option>
+                <option value="HIHawaii">Hawaii</option>
+                <option value="GUGuam">Guam</option>
+                <option value="VIUnited States Virgin Islands">United States Virgin Islands</option>
+                <option value="UTUtah">Utah</option>
+                <option value="OROregon">Oregon</option>
+                <option value="CACalifornia">California</option>
+                <option value="NJNew Jersey">New Jersey</option>
+                <option value="NDNorth Dakota">North Dakota</option>
+                <option value="KYKentucky">Kentucky</option>
+                <option value="MNMinnesota">Minnesota</option>
+                <option value="OKOklahoma">Oklahoma</option>
+                <option value="PAPennsylvania">Pennsylvania</option>
+                <option value="NMNew Mexico">New Mexico</option>
+                <option value="ASAmerican Samoa">American Samoa</option>
+                <option value="ILIllinois">Illinois</option>
+                <option value="MIMichigan">Michigan</option>
+                <option value="VAVirginia">Virginia</option>
+                <option value="UM-67Johnston Atoll">Johnston Atoll</option>
+                <option value="WVWest Virginia">West Virginia</option>
+                <option value="MSMississippi">Mississippi</option>
+                <option value="MPNorthern Mariana Islands">Northern Mariana Islands</option>
+                <option value="UMUnited States Minor Outlying Islands">United States Minor Outlying Islands</option>
+                <option value="MAMassachusetts">Massachusetts</option>
+                <option value="AZArizona">Arizona</option>
+                <option value="CTConnecticut">Connecticut</option>
+                <option value="FLFlorida">Florida</option>
+                <option value="DCDistrict of Columbia">District of Columbia</option>
+                <option value="UM-71Midway Atoll">Midway Atoll</option>
+                <option value="UM-76Navassa Island">Navassa Island</option>
+                <option value="INIndiana">Indiana</option>
+                <option value="WIWisconsin">Wisconsin</option>
+                <option value="WYWyoming">Wyoming</option>
+                <option value="SCSouth Carolina">South Carolina</option>
+                <option value="ARArkansas">Arkansas</option>
+                <option value="SDSouth Dakota">South Dakota</option>
+                <option value="MTMontana">Montana</option>
+                <option value="NCNorth Carolina">North Carolina</option>
+                <option value="UM-95Palmyra Atoll">Palmyra Atoll</option>
+                <option value="PRPuerto Rico">Puerto Rico</option>
+                <option value="COColorado">Colorado</option>
+                <option value="MOMissouri">Missouri</option>
+                <option value="NYNew York">New York</option>
+                <option value="MEMaine">Maine</option>
+                <option value="TNTennessee">Tennessee</option>
+                <option value="GAGeorgia">Georgia</option>
+                <option value="ALAlabama">Alabama</option>
+                <option value="LALouisiana">Louisiana</option>
+                <option value="NVNevada">Nevada</option>
+                <option value="IAIowa">Iowa</option>
+                <option value="IDIdaho">Idaho</option>
+                <option value="RIRhode Island">Rhode Island</option>
+                <option value="WAWashington">Washington</option>
+                <option value="OHOhio">Ohio</option>
+            </select>
+        </div>
+        <div id="error-message"></div>
+        <div style="margin-top: 20px; text-align: center;">
+            <input style="width: 20%" type="submit" value="Submit">
+        </div>
+
+
+    </form>
+
+
+
+</div>
+</body>
+</html>
