@@ -2,100 +2,51 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login</title>
-  <style>
-    #first-div {
-      width: 100%;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login</title>
+    <style>
+        #first-div {
+            width: 100%;
+        }
 
-    label {
-      color: #ffffff;
-      width: 100%;
-    }
+        label {
+            color: #ffffff;
+            width: 100%;
+        }
 
-    input {
-      width: 100%;
-    }
+        input {
+            width: 100%;
+        }
 
-    div {
-      margin-top: 20px;
-    }
-  </style>
-  <script>
-    // --- Form submission handler ---
-    // Get the form object
-    window.onload = () => {
-      var form = document.getElementById('register-form');
-      console.log(form)
-      form.onsubmit = (event) => {
-        event.preventDefault()
-        var request = new XMLHttpRequest();
-        var formData = new FormData(form);
-        console.log(formData)
-        //open the request
-        fetch('https://commonlawrepublic.us/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(Object.fromEntries(formData))
-        }).then((response) => {
-          response.json().then((result) => {
-            // On failure
-            if (typeof result.error !== "undefined") {
-              const previousError = document.getElementById("error-paragraph")
-              const errorParagraph = document.createElement('p')
-              errorParagraph.id = "error-paragraph"
-              errorParagraph.innerHTML = result.message
-              errorParagraph.style.cssText = "color: #f38ba8; text-align: center"
-              if (previousError !== null) {
-                document.getElementById("error-message").replaceChild(errorParagraph, previousError)
-              }
-              document.getElementById("error-message").appendChild(errorParagraph)
-            }
-            // On success
-            else {
-              const successParagraph = document.createElement('p')
-              successParagraph.id = "success-paragraph"
-              successParagraph.innerHTML = result.message
-              successParagraph.style.cssText = "color: #a6e3a1; text-align: center"
-              document.getElementById("error-message").appendChild(successParagraph)
-            }
-
-          })
-        }).catch((error) => {
-          console.log(error)
-          console.log("This get called")
-          const errorParagraph = document.createElement('p')
-          errorParagraph.innerHTML = error
-          errorParagraph.style.cssText = "color: #f38ba8; text-align: center"
-          document.getElementById("error-message").appendChild(errorParagraph)
-        })
-      }
-    }
-  </script>
+        div {
+            margin-top: 20px;
+        }
+    </style>
+    <script type="text/javascript" src="/javascript/Login.js"></script>
+</head>
 </head>
 
 <body style="background-color: #000000;">
-  <h1 style="color: #e7e10e; text-align: center;">Login</h1>
-  <div style="justify-self: center;">
+<h1 style="color: #e7e10e; text-align: center;">Login</h1>
+<div style="justify-self: center;">
     <p style="display: inline; color: #ffffff;">Don't have an account? </p><a href="RegistrationForm.html"
-      style="color: #e7e10e;">Register here</a>
-  </div>
-  <form id="register-form" style="justify-self: center; width: 300px;">
+                                                                              style="color: #e7e10e;">Register here</a>
+</div>
+<form id="register-form" style="justify-self: center; width: 300px;">
     <div>
-      <label>Email:</label><br>
-      <input type="text" id="email" name="email"><br>
+        <label>Email:
+            <input type="text" id="email" name="email">
+        </label>
     </div>
     <div>
-      <label>Password:</label><br>
-      <input type="text" id="password" name="password"><br>
+        <label>Password:
+            <input type="text" id="password" name="password">
+        </label>
     </div>
-    <div id="error-message"></div>
+    <div id="response-message"></div>
     <div style="margin-top: 20px; text-align: center;">
-      <input style="width: 20%" type="submit" value="Submit">
+        <input style="width: 20%" type="submit" value="Submit">
     </div>
 </body>
 
